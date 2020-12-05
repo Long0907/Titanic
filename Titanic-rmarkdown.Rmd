@@ -9,7 +9,6 @@ editor_options:
 # Luqing will work on the logistic regression part.
 ## __Use machine learning to create a model that predicts which passengers survived the Titanic shipwreck__
 
-# We first started with a simple logistic regression to predict survial, and will compare the results from this to a more advanced machine learning model. 
 
 #required packages
 ```{r, include=FALSE}
