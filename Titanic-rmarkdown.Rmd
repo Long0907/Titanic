@@ -1,0 +1,17 @@
+---
+title: "Titanic"
+author: "Long Zheng"
+date: "12/4/2020"
+output: html_document
+---
+
+#required packages
+```{r}
+library(tidyverse)
+```
+
+#load the dataset.
+```{r}
+train<- read_csv("dataset/train.csv")
+```
+
