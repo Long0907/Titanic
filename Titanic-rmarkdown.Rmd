@@ -7,6 +7,9 @@ editor_options:
   chunk_output_type: console
 ---
 
+## __Use machine learning to create a model that predicts which passengers survived the Titanic shipwreck__
+
+
 #required packages
 ```{r, include=FALSE}
 library(tidyverse)
