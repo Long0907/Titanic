@@ -3,15 +3,20 @@ title: "Titanic"
 author: "Long Zheng"
 date: "12/4/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 #required packages
-```{r}
+```{r, include=FALSE}
 library(tidyverse)
 ```
 
 #load the dataset.
 ```{r}
 train<- read_csv("dataset/train.csv")
+#get an overview of the data
+train %>% 
+  skimr::skim()
 ```
 
