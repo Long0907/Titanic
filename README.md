@@ -1,2 +1,2 @@
-This is a project from Kaggle (https://www.kaggle.com/c/titanic/data?select=train.csv). predict the survival status of an individual in the titanic based on several features.
+This is a project from Kaggle (https://www.kaggle.com/c/titanic/data?select=train.csv). predict the survival status of individuals in the titanic based on several features.
 Luqing and i are working on this project.
