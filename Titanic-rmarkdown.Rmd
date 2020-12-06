@@ -15,15 +15,44 @@ editor_options:
 library(tidyverse)
 ```
 
-#load the dataset and explore.
+#load the trainning dataset and explore.
 ```{r}
 train<- read_csv("dataset/train.csv")
-#get an overview of the data
-train %>% 
-  skimr::skim()
+```
+
+
+```{r EDA}
 #drop cabin column, because of too many missing data 687/891. 
 train <- train[!colnames(train)=='Cabin']
+# make sex and embarked as factor variables with levels
+train<-
+  train %>% 
+  mutate(Sex.f = as.factor(Sex),
+         Embarked.f = factor(Embarked))
+#get an overview of the data
+t1<-
+train %>% 
+  select(Survived,Pclass,Age,SibSp,Parch,Fare,Sex.f,Embarked.f) %>% 
+  skimr::skim()
+t1 <- data.frame(t1)
 
 
+# survival distribution  
+hist(train$Survived)
+# age
+hist(train$Age,xlab = "Age",ylab = "count", main = "")
+# sex
+hist(train$Sex2,xlab = "Gender(male =1)",ylab = "count", main = "")
+```
+
+
+
+
+
+```{r univariable analysis}
+univ_embk<-glm(Survived~Embarked2, family = binomial, data = train)
+summary(univ_embk)
+univ_Pclass<-glm(Survived~Pclass, family = binomial, data = train)
+summary(univ_Pclass)
 ```
 
