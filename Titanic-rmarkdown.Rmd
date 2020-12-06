@@ -38,8 +38,16 @@ train %>%
   skimr::skim()
 #too much missing data in cabin (687/891). 
 
-#use glmulti to obtain a best model.
+# survival distribution  
+hist(train$Survived)
+# age
+hist(train$Age,xlab = "Age",ylab = "count", main = "")
+# sex
+hist(train$Sex2,xlab = "Gender(male =1)",ylab = "count", main = "")
+```
 
+#use glmulti to obtain a best model.
+```{r}
 best_subset_att <-
   glmulti::glmulti(Survived ~ Age+factor(Pclass)+Sex.f+Fare+SibSp+Parch+Embarked.f, 
           data = train,
@@ -47,7 +55,11 @@ best_subset_att <-
 
 best_model <- 
   summary(best_subset_att)$bestmodel %>% glm(., data = train, family = binomial)
+```
 
+
+
+```{r}
 #Assess godness of fit.
 ResourceSelection::hoslem.test(best_model$y, fitted(best_model), g=20)
 
@@ -122,6 +134,10 @@ best_model.p %>%
   geom_abline(slope = 1, intercept = 0)
 
 
+```
+
+#test prediction based on the selected logistic model
+```{r}
 #######Model prediction
 test <- read_csv("dataset/test.csv")
 
@@ -130,8 +146,10 @@ test<-
   test %>% 
   mutate(Sex.f = as.factor(Sex),
          Embarked.f = factor(Embarked))
-#get an overview of the data
+#test prediction.
 test_prediction <- tibble(pred.test = predict(best_model, test, type = "response"))
+
+#cut point 0.5.
 test_prediction <-test_prediction %>% 
   mutate(Survived = if_else(pred.test>0.5, 1, 0),
          PassengerId = test$PassengerId)
@@ -141,22 +159,7 @@ submission <-
   select(PassengerId, Survived)
 
 write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
-
-
-t1 <- data.frame(t1)
-
-
-# survival distribution  
-hist(train$Survived)
-# age
-hist(train$Age,xlab = "Age",ylab = "count", main = "")
-# sex
-hist(train$Sex2,xlab = "Gender(male =1)",ylab = "count", main = "")
 ```
-
-
-
->>>>>>> e8cb8a5ec472e9426e3627b920d889d758386d69
 
 
 ```{r univariable analysis}
