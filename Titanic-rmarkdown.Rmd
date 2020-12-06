@@ -6,7 +6,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-# Luqing will work on the logistic regression part.
+
 ## __Use machine learning to create a model that predicts which passengers survived the Titanic shipwreck__
 
 
@@ -44,9 +44,6 @@ hist(train$Age,xlab = "Age",ylab = "count", main = "")
 # sex
 hist(train$Sex2,xlab = "Gender(male =1)",ylab = "count", main = "")
 ```
-
-
-
 
 
 ```{r univariable analysis}
