@@ -21,8 +21,7 @@ train<- read_csv("dataset/train.csv")
 #get an overview of the data
 train %>% 
   skimr::skim()
-#drop cabin column, because of too many missing data 687/891. 
-train <- train[!colnames(train)=='Cabin']
+#too much missing data in cabin (687/891). 
 
 
 ```
