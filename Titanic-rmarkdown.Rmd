@@ -30,12 +30,14 @@ train <- train[!colnames(train)=='Cabin']
 train<-
   train %>% 
   mutate(Sex.f = as.factor(Sex),
-         Embarked.f = factor(Embarked))
+         Embarked.f = factor(Embarked),
+         Pclass.f = factor(Pclass),
+         Survived = factor(Survived))
 #get an overview of the data
 t1<-
 train %>% 
-  select(Survived,Pclass,Age,SibSp,Parch,Fare,Sex.f,Embarked.f) %>% 
-  skimr::skim()
+  select(Pclass,Age,SibSp,Parch,Fare,Sex.f,Embarked.f) %>% 
+  GGally::ggpairs()
 #too much missing data in cabin (687/891). 
 t1 <- data.frame(t1)
 
@@ -45,6 +47,7 @@ hist(train$Survived)
 hist(train$Age,xlab = "Age",ylab = "count", main = "")
 # sex
 hist(train$Sex2,xlab = "Gender(male =1)",ylab = "count", main = "")
+<<<<<<< HEAD
 # fare
 hist(train$Fare)
 ```
@@ -86,14 +89,31 @@ summary(univ_Fare)
 #use glmulti to obtain a best model.
 best_subset_att <-
   glmulti::glmulti(Survived~Age+factor(Pclass)+Sex.f+Fare+Parch+Embarked.f, data = train,level=1, family = binomial, crit="aicc", confsetsize=128)
+=======
+```
+
+#use glmulti to obtain a best model.
+```{r}
+best_subset_att <-
+  glmulti::glmulti(Survived ~ I(Age^(-1))+factor(Pclass)+Sex.f+Fare+SibSp+Parch+Embarked.f, 
+          data = train,
+          level=1, family = binomial, crit="aicc", confsetsize=128)
+>>>>>>> e2dbec63ea418e429f9179ebe254e5d807814989
 
 best_model <- 
   summary(best_subset_att)$bestmodel %>% glm(., data = train, family = binomial)
+```
 
+
+<<<<<<< HEAD
 glm(Survived~+factor(Pclass)+Sex.f+Age+SibSp,family = binomial,data = train) %>% summary()
 # add interaction 
 glm(Survived~1+factor(Pclass)+Sex.f+Age+SibSp,family = binomial,data = train) %>% summary()
 
+=======
+
+```{r}
+>>>>>>> e2dbec63ea418e429f9179ebe254e5d807814989
 #Assess godness of fit.
 ResourceSelection::hoslem.test(best_model$y, fitted(best_model), g=20)
 
@@ -168,6 +188,10 @@ best_model.p %>%
   geom_abline(slope = 1, intercept = 0)
 
 
+```
+
+#test prediction based on the selected logistic model
+```{r}
 #######Model prediction
 test <- read_csv("dataset/test.csv")
 
@@ -175,9 +199,14 @@ test <- read_csv("dataset/test.csv")
 test<-
   test %>% 
   mutate(Sex.f = as.factor(Sex),
-         Embarked.f = factor(Embarked))
-#get an overview of the data
+         Embarked.f = factor(Embarked),
+         Pclass.f = factor(Pclass),
+         Survived = factor(Survived)
+         )
+#test prediction.
 test_prediction <- tibble(pred.test = predict(best_model, test, type = "response"))
+
+#cut point 0.5.
 test_prediction <-test_prediction %>% 
   mutate(Survived = if_else(pred.test>0.5, 1, 0),
          PassengerId = test$PassengerId)
@@ -187,21 +216,102 @@ submission <-
   select(PassengerId, Survived)
 
 write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
-
 ```
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> e8cb8a5ec472e9426e3627b920d889d758386d69
-
-
->>>>>>> fde28cf4d522e575f77733ca687e7f9061336f0d
 ```{r univariable analysis}
 univ_embk<-glm(Survived~Embarked2, family = binomial, data = train)
 summary(univ_embk)
 univ_Pclass<-glm(Survived~Pclass, family = binomial, data = train)
 summary(univ_Pclass)
 ```
+
+<<<<<<< HEAD
+=======
+#####try use other machine learning methods. randomForest classification.
+```{r}
+train_random <- train %>% 
+  select(Survived, Age,Pclass.f, Sex.f,Fare,SibSp,Parch,Embarked.f)
+
+#add one column, if Age == NA, then 1. else 0. 
+age_na <- is.na(train_random$Age)
+
+train_random[!age_na,] %>% 
+  psych::describe()
+age_model <- lm(Age~Pclass.f+I(log(Fare+0.01))+SibSp, data=train_random[!age_na,])
+summary(age_model)
+
+
+pred_age <- predict(age_model, train_random)
+
+  
+impute_data<-train_random %>% 
+  mutate(Age = if_else(is.na(Age), pred_age, Age))
+  
+impute_data<- na.omit(impute_data)
+
+rf_model1 <- randomForest(Survived~.,
+                   data = impute_data, importance=TRUE, mtry=3)
+rf_model1
+
+
+predict(rf_model1, test_set, type = "class")
+
+
+>>>>>>> e2dbec63ea418e429f9179ebe254e5d807814989
+```
+
+#test prediction based on the selected randomForest model
+```{r}
+#######Model prediction
+test <- read_csv("dataset/test.csv")
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+# make sex and embarked as factor variables with levels
+test<-
+  test %>% 
+  mutate(Sex.f = as.factor(Sex),
+         Embarked.f = factor(Embarked),
+         Pclass.f = factor(Pclass))
+#impute NAs with predicted Age
+pred_age_test <- predict(age_model, test)
+>>>>>>> e2dbec63ea418e429f9179ebe254e5d807814989
+
+impute_data_test<-test %>% 
+  mutate(Age = if_else(is.na(Age), pred_age_test, Age))
+
+
+<<<<<<< HEAD
+>>>>>>> fde28cf4d522e575f77733ca687e7f9061336f0d
+```{r univariable analysis}
+univ_embk<-glm(Survived~Embarked2, family = binomial, data = train)
+summary(univ_embk)
+univ_Pclass<-glm(Survived~Pclass, family = binomial, data = train)
+summary(univ_Pclass)
+=======
+#test prediction.
+test_prediction <- tibble(pred.test = predict(rf_model1, impute_data_test, type = "class"))
+
+#cut point 0.5.
+test_prediction <-test_prediction %>% 
+  mutate(PassengerId = test$PassengerId,
+         Survived = pred.test)
+
+submission <- 
+  test_prediction %>% 
+  select(PassengerId, Survived)
+
+write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
+>>>>>>> e2dbec63ea418e429f9179ebe254e5d807814989
+```
+
+
+
+
+
+
+
 
