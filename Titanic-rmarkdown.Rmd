@@ -68,6 +68,7 @@ train_random <- train %>%
 
 age_na <- is.na(train_random$Age)
 
+
 train_random[!age_na,] %>% 
   psych::describe()
 age_model <- lm(Age~Pclass.f+I(log(Fare+0.01))+SibSp, data=train_random[!age_na,])
@@ -77,6 +78,12 @@ pred_age <- predict(age_model, train_random)
 
 impute_data<-train_random %>% 
   mutate(Age = if_else(is.na(Age), pred_age, Age))
+
+#use glmulti to obtain a best model.
+best_subset_att <-
+  glmulti::glmulti(Survived~Age+factor(Pclass)+Sex.f+Fare+Parch+Embarked.f, data = train,level=1, family = binomial, crit="aicc", confsetsize=128)
+```
+
 
 # impute NA fare value with fare median
 impute_data<-
@@ -105,9 +112,22 @@ best_subset_att <-
           level=1, family = binomial, crit="aicc", confsetsize=128)
 
 best_model <- 
+
   summary(best_subset_att)$bestmodel %>% glm(., data = impute_data, family = binomial)
 summary(best_model)
 ```
+
+```{r}
+
+
+  summary(best_subset_att)$bestmodel %>% glm(., data = train, family = binomial)
+
+glm(Survived~+factor(Pclass)+Sex.f+Age+SibSp,family = binomial,data = train) %>% summary()
+# add interaction 
+glm(Survived~1+factor(Pclass)+Sex.f+Age+SibSp,family = binomial,data = train) %>% summary()
+```
+
+
 
 ```{r}
 
@@ -234,16 +254,6 @@ write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
 ```
 
 
-
-
-
-
-
-
-
-
-
-
 #####try use other machine learning methods. randomForest classification.
 ```{r}
 train_random <- train %>% 
@@ -272,6 +282,7 @@ rf_model1
 
 
 predict(rf_model1, test_set, type = "class")
+
 
 ```
 
