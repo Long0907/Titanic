@@ -7,6 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
+
 ## __Use machine learning to create a model that predicts which passengers survived the Titanic shipwreck__
 
 
@@ -84,7 +85,7 @@ best_subset_att <-
   glmulti::glmulti(Survived~Age+factor(Pclass)+Sex.f+Fare+Parch+Embarked.f, data = train,level=1, family = binomial, crit="aicc", confsetsize=128)
 ```
 
-
+```{r}
 # impute NA fare value with fare median
 impute_data<-
   impute_data %>% 
@@ -254,31 +255,19 @@ write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
 ```
 
 
+
 #####try use other machine learning methods. randomForest classification.
+
 ```{r}
-train_random <- train %>% 
-  select(Survived, Age,Pclass.f, Sex.f,Fare,SibSp,Parch,Embarked.f)
+predict <-impute_data %>% 
+select(Survived, Pclass.f, Sex.f, cabin.f,fare_cut, family, Age, Embarked.f)
 
-#add one column, if Age == NA, then 1. else 0. 
-age_na <- is.na(train_random$Age)
-
-train_random[!age_na,] %>% 
-  psych::describe()
-age_model <- lm(Age~Pclass.f+I(log(Fare+0.01))+SibSp, data=train_random[!age_na,])
-summary(age_model)
-
-
-pred_age <- predict(age_model, train_random)
-
-  
-impute_data<-train_random %>% 
-  mutate(Age = if_else(is.na(Age), pred_age, Age))
-  
-impute_data<- na.omit(impute_data)
-
+predict = na.omit(predict)
 rf_model1 <- randomForest(Survived~.,
-                   data = impute_data, importance=TRUE, mtry=3)
+                   data = predict, importance=TRUE, mtry=3)
 rf_model1
+
+
 
 
 predict(rf_model1, test_set, type = "class")
@@ -286,36 +275,49 @@ predict(rf_model1, test_set, type = "class")
 
 ```
 
-#test prediction based on the selected randomForest model
+##test prediction based on the selected randomForest model
 ```{r}
 #######Model prediction
 test <- read_csv("dataset/test.csv")
+skimr::skim(test)
 
-# make sex and embarked as factor variables with levels
 test<-
   test %>% 
   mutate(Sex.f = as.factor(Sex),
          Embarked.f = factor(Embarked),
-         Pclass.f = factor(Pclass))
-#impute NAs with predicted Age
-pred_age_test <- predict(age_model, test)
+         Pclass.f = factor(Pclass),
+         cabin.f= factor(if_else(is.na(Cabin),0,1)),
+         Fare = if_else(is.na(Fare), median(Fare), Fare),
+         Fare = if_else(Fare== 0, Fare+1, Fare),
+         fare_cut = ntile(Fare,4),
+         family = SibSp+Parch+1,
+         )
 
+# impute NA value of age 
+
+age_model_test <- lm(Age~Pclass.f+I(log(Fare+0.01))+SibSp, data=test)
+summary(age_model_test)
+
+pred_age_test <- predict(age_model_test, test)
 
 impute_data_test<-test %>% 
   mutate(Age = if_else(is.na(Age), pred_age_test, Age))
-```
 
+# make Age categorical 
+impute_data_test<-
+  impute_data_test %>% 
+  mutate(age_cut= ntile(Age,4))
+#creat predict_test dataset
+predict_test <-impute_data %>% 
+select(Survived, Pclass.f, Sex.f, cabin.f,fare_cut, family, Age, Embarked.f)
 
-```{r univariable analysis}
-univ_embk<-glm(Survived~Embarked2, family = binomial, data = train)
-summary(univ_embk)
-univ_Pclass<-glm(Survived~Pclass, family = binomial, data = train)
-summary(univ_Pclass)
+predict_test = na.omit(predict_test)
+
 
 #test prediction.
 test_prediction <- tibble(pred.test = predict(rf_model1, impute_data_test, type = "class"))
 
-#cut point 0.5.
+
 test_prediction <-test_prediction %>% 
   mutate(PassengerId = test$PassengerId,
          Survived = pred.test)
@@ -324,8 +326,16 @@ submission <-
   test_prediction %>% 
   select(PassengerId, Survived)
 
-write.csv(submission, "Titanic-submission.csv", row.names = FALSE)
+write.csv(submission, "Titanic-submission_randomforest.csv", row.names = FALSE)
 
+```
+
+
+```{r univariable analysis}
+univ_embk<-glm(Survived~Embarked2, family = binomial, data = train)
+summary(univ_embk)
+univ_Pclass<-glm(Survived~Pclass, family = binomial, data = train)
+summary(univ_Pclass)
 ```
 
 
